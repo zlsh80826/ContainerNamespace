@@ -72,20 +72,6 @@ int main(int argc, char** argv) {
         fprintf(stderr, "Failed to create message queue with msgqid = %d\n", msgqid);
         return 1;
     }
-    
-    rc = msgrcv(msgqid, &msg, sizeof(msg.mtext), 0, 0);
-    if (rc < 0) {
-        perror(strerror(errno));
-        fprintf(stderr, "msgrecv failed, rc = %d\n", rc);
-    }
-    printf("Redirecting: %s ... \n", msg.mtext);
-
-    rc = msgctl(msgqid, IPC_RMID, NULL);
-    if (rc < 0) {
-        perror(strerror(errno));
-        fprintf(stderr, "msgctl (return queue) failed, rc = %d\n", rc);
-        return 1;
-    }
 
     int inotifyFd, wd;
 
@@ -96,16 +82,34 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    wd = inotify_add_watch(inotifyFd, getcwd(NULL, 0), IN_DELETE);
-    if (wd == -1) {
-        perror(strerror(errno));
-        fprintf(stderr, "inotify_add_watch error\n");
-        return 1;
+    while (true) {
+
+        rc = msgrcv(msgqid, &msg, sizeof(msg.mtext), 0, 0);
+        if (rc < 0) {
+            perror(strerror(errno));
+            fprintf(stderr, "msgrecv failed, rc = %d\n", rc);
+        }
+        printf("Redirecting: %s ... \n", msg.mtext);
+
+
+
+        wd = inotify_add_watch(inotifyFd, getcwd(NULL, 0), IN_DELETE);
+        if (wd == -1) {
+            perror(strerror(errno));
+            fprintf(stderr, "inotify_add_watch error\n");
+            return 1;
+        }
+        
+        FILE *fp = fopen("message", "w");
+        fputs(msg.mtext, fp);
+        fputc('\n', fp);
+        fclose(fp);
     }
-    
-    FILE *fp = fopen("message", "w");
-    fputs(msg.mtext, fp);
-    fputc('\n', fp);
-    fclose(fp);
+        rc = msgctl(msgqid, IPC_RMID, NULL);
+        if (rc < 0) {
+            perror(strerror(errno));
+            fprintf(stderr, "msgctl (return queue) failed, rc = %d\n", rc);
+            return 1;
+        }
     return 0;
 }

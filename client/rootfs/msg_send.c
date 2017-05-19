@@ -26,14 +26,16 @@ int main(int argc,char **argv)
 		return 1;
 	}
 
-	msg.mtype = 1;
-	scanf("%s", msg.mtext);
-	rc = msgsnd(msgqid, &msg, sizeof(msg.mtext), 0);
-	if (rc < 0) {
-		perror( strerror(errno) );
-		printf("msgsnd failed, rc = %d\n", rc);
-		return 1;
-	}
+   
+    while (scanf("%s", msg.mtext) != EOF) {
+	    msg.mtype = 1;
+        rc = msgsnd(msgqid, &msg, sizeof(msg.mtext), 0);
+        if (rc < 0) {
+            perror( strerror(errno) );
+            printf("msgsnd failed, rc = %d\n", rc);
+            return 1;
+        }
+    }
 
 	return 0;
 }

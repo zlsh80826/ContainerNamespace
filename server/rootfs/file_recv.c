@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 					putchar(ch);
 				printf("\n");
 				system("rm -f message");
-				goto end;
+				// goto end;
 			}
 
 			p += sizeof(struct inotify_event) + event->len;
