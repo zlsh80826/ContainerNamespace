@@ -90,6 +90,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Cloud Computing - Container</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#environment">Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bridge">Bridge</a></li>
 </ul>
 </li>
 </ul>
@@ -161,6 +162,7 @@
 <ul class="simple">
 <li><a class="reference internal" href="#environment" id="id1">Environment</a></li>
 <li><a class="reference internal" href="#structure" id="id2">Structure</a></li>
+<li><a class="reference internal" href="#bridge" id="id3">Bridge</a></li>
 </ul>
 </div>
 <div class="section" id="environment">
@@ -186,19 +188,30 @@
 <div class="section" id="structure">
 <h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Figure 1 shows the structure of this project, there are four directory</p>
-<blockquote>
-<div><ul class="simple">
+<ul class="simple">
 <li>server</li>
 <li>client</li>
 <li>common</li>
 <li>program</li>
 </ul>
-</div></blockquote>
-<p>Server and Client directory contain the <code class="docutils literal"><span class="pre">config.json</span></code>, <code class="docutils literal"><span class="pre">rootfs</span></code>
+<p><strong>server</strong> and <strong>client</strong> directory contain the <code class="docutils literal"><span class="pre">config.json</span></code>, <code class="docutils literal"><span class="pre">rootfs</span></code>
 which are the necessary info for <code class="docutils literal"><span class="pre">runc</span></code>, <code class="docutils literal"><span class="pre">run.sh</span></code> is the script
 to run the specific container, using <code class="docutils literal"><span class="pre">sh</span> <span class="pre">run.sh</span></code> to run.</p>
+<p><strong>program</strong> directory contain a <code class="docutils literal"><span class="pre">bridge.c</span></code> which can set namespace same as container
+and the <code class="docutils literal"><span class="pre">Makefile</span></code>, <strong>common</strong> directory store the PID of server and client container.</p>
 <img alt="_images/1.png" src="_images/1.png" />
 <p>Figure 1.</p>
+</div>
+<div class="section" id="bridge">
+<h2>Bridge<a class="headerlink" href="#bridge" title="Permalink to this headline">¶</a></h2>
+<p>In this project, we want to build an echo server with two container, which will</p>
+<ol class="arabic simple">
+<li>Run the bridge program on host, which will be the bridge of two container.</li>
+<li>Start container server and run the server program, which will block for an imcoming message.</li>
+<li>Start container client and run the client program, which will block for user inputs.</li>
+<li>The bridge program will set its <code class="docutils literal"><span class="pre">IPC</span></code> same as client container, and set its <code class="docutils literal"><span class="pre">MNT</span></code> same as server container.</li>
+<li>After user type something, client will communcate with bridge through IPC protocal, and bridge will write file <code class="docutils literal"><span class="pre">message</span></code> to communcate with server.</li>
+</ol>
 </div>
 </div>
 
