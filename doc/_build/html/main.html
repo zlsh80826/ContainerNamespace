@@ -91,6 +91,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#environment">Environment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#bridge">Bridge</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementaion">Implementaion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
 </ul>
 </li>
 </ul>
@@ -163,6 +165,8 @@
 <li><a class="reference internal" href="#environment" id="id1">Environment</a></li>
 <li><a class="reference internal" href="#structure" id="id2">Structure</a></li>
 <li><a class="reference internal" href="#bridge" id="id3">Bridge</a></li>
+<li><a class="reference internal" href="#implementaion" id="id4">Implementaion</a></li>
+<li><a class="reference internal" href="#usage" id="id5">Usage</a></li>
 </ul>
 </div>
 <div class="section" id="environment">
@@ -206,12 +210,51 @@ and the <code class="docutils literal"><span class="pre">Makefile</span></code>,
 <h2>Bridge<a class="headerlink" href="#bridge" title="Permalink to this headline">¶</a></h2>
 <p>In this project, we want to build an echo server with two container, which will</p>
 <ol class="arabic simple">
-<li>Run the bridge program on host, which will be the bridge of two container.</li>
 <li>Start container server and run the server program, which will block for an imcoming message.</li>
 <li>Start container client and run the client program, which will block for user inputs.</li>
+<li>Run the bridge program on host, which will be the bridge of two container.</li>
 <li>The bridge program will set its <code class="docutils literal"><span class="pre">IPC</span></code> same as client container, and set its <code class="docutils literal"><span class="pre">MNT</span></code> same as server container.</li>
 <li>After user type something, client will communcate with bridge through IPC protocal, and bridge will write file <code class="docutils literal"><span class="pre">message</span></code> to communcate with server.</li>
 </ol>
+</div>
+<div class="section" id="implementaion">
+<h2>Implementaion<a class="headerlink" href="#implementaion" title="Permalink to this headline">¶</a></h2>
+<p>When we start the container, we used <code class="docutils literal"><span class="pre">--pid-file</span></code> to record the pid and store on <strong>common</strong> directory,
+then the <strong>bridge</strong> program will get the server, client PID from <code class="docutils literal"><span class="pre">pid-file</span></code>, then use <code class="docutils literal"><span class="pre">setns()</span></code> to set the
+namespace to achieve the functionality of bridge.</p>
+<div class="highlight-cpp"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">server_pid</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">client_pid</span><span class="p">;</span>
+
+<span class="n">GetContainerPid</span><span class="p">(</span><span class="o">&amp;</span><span class="n">server_pid</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">client_pid</span><span class="p">);</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">client_path</span> <span class="o">=</span> <span class="s">&quot;/proc/&quot;</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">client_pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/ns/ipc&quot;</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">server_path</span> <span class="o">=</span> <span class="s">&quot;/proc/&quot;</span> <span class="o">+</span> <span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">server_pid</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/ns/mnt&quot;</span><span class="p">;</span>
+
+<span class="n">setns</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="n">client_path</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">O_RDONLY</span><span class="p">),</span> <span class="n">CLONE_NEWIPC</span><span class="p">))</span>
+<span class="n">setns</span><span class="p">(</span><span class="n">open</span><span class="p">(</span><span class="n">server_path</span><span class="p">.</span><span class="n">c_str</span><span class="p">(),</span> <span class="n">O_RDONLY</span><span class="p">),</span> <span class="n">CLONE_NEWNS</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>Open a session for server</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> server
+ $ ./run.sh
+/# ./server
+</pre></div>
+</div>
+<p>then, open another session for client</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span> $ <span class="nb">cd</span> client
+ $ ./run.sh
+/# ./client &lt;ipc_num&gt;
+</pre></div>
+</div>
+<p>finally, open a session for bridge</p>
+<div class="highlight-shell"><div class="highlight"><pre><span></span>$ <span class="nb">cd</span> bridge
+$ make
+$ ./bridge &lt;ipc_num&gt; <span class="c1"># need privilege</span>
+</pre></div>
+</div>
 </div>
 </div>
 
