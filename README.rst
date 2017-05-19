@@ -31,7 +31,7 @@ to run the specific container, using ``sh run.sh`` to run.
 **program** directory contain a ``bridge.c`` which can set namespace same as container
 and the ``Makefile``, **common** directory store the PID of server and client container.
 
-.. image:: 1.png
+.. image:: ./doc/1.png
 
 Figure 1.
 
