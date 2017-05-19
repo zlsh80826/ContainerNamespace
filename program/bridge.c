@@ -11,6 +11,7 @@
 #include <sys/msg.h>
 #include <sys/wait.h>
 #include <sys/errno.h>
+#include <sys/inotify.h>
 #include <errno.h>
 
 #define MSGPERM 0600    
@@ -75,15 +76,36 @@ int main(int argc, char** argv) {
     rc = msgrcv(msgqid, &msg, sizeof(msg.mtext), 0, 0);
     if (rc < 0) {
         perror(strerror(errno));
-        printf("msgrecv failed, rc = %d\n", rc);
+        fprintf(stderr, "msgrecv failed, rc = %d\n", rc);
     }
-    printf("Recv: %s\n", msg.mtext);
+    printf("Redirecting: %s ... \n", msg.mtext);
 
     rc = msgctl(msgqid, IPC_RMID, NULL);
     if (rc < 0) {
         perror(strerror(errno));
-        printf("msgctl (return queue) failed, rc = %d\n", rc);
+        fprintf(stderr, "msgctl (return queue) failed, rc = %d\n", rc);
         return 1;
     }
+
+    int inotifyFd, wd;
+
+    inotifyFd = inotify_init();
+    if (inotifyFd == -1) {
+        perror(strerror(errno));
+        fprintf(stderr, "inotifyFd error\n");
+        return 1;
+    }
+
+    wd = inotify_add_watch(inotifyFd, getcwd(NULL, 0), IN_DELETE);
+    if (wd == -1) {
+        perror(strerror(errno));
+        fprintf(stderr, "inotify_add_watch error\n");
+        return 1;
+    }
+    
+    FILE *fp = fopen("message", "w");
+    fputs(msg.mtext, fp);
+    fputc('\n', fp);
+    fclose(fp);
     return 0;
 }
