@@ -14,8 +14,12 @@ int main(int argc,char **argv)
 {
 	int msgqid, rc;
 	struct msg_buf msg;
-
-	msgqid = msgget(MAGIC, 0);
+	
+	if (argc > 1) {
+		msgqid = msgget(atoi(argv[1]), 0);
+	} else {
+		msgqid = msgget(MAGIC, 0);
+	}
 	if (msgqid < 0) {
 		perror(strerror(errno));
 		printf("failed to create message queue with msgqid = %d\n", msgqid);
